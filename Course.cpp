@@ -25,6 +25,7 @@ void Course::setCapacity(int c) {
 	this->capacity = c;
 }
 
+
 void Course::setTime(string t) {
 	this->time = t;
 }

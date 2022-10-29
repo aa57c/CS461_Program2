@@ -3,6 +3,7 @@
 
 
 #include <iostream>
+#include <string>
 #include <random>
 #include <map>
 #include <vector>
@@ -93,26 +94,7 @@ void removeDuplicates(vector<Course>& schedule) {
 
 }
 
-//fitness function defined here? (probably will put this in a header file and in its own file)
 
-void RoomSizeCritera(Course& course) {
-	if (course.getRoom().second < course.getCapacity()) {
-		course.incFitnessScore(-0.5);
-	}
-	else if (course.getRoom().second > course.getCapacity() * 3) {
-		course.incFitnessScore(-0.2);
-
-
-	}
-	else if (course.getRoom().second > course.getCapacity() * 6) {
-		course.incFitnessScore(-0.4);
-	}
-	else {
-		course.incFitnessScore(0.3);
-
-	}
-
-}
 
 void setPreferredFaculty(map<int, vector<Course>>& schedules, 
 	map<int, vector<Course>>::iterator i) {
@@ -210,14 +192,114 @@ void setPreferredFaculty(map<int, vector<Course>>& schedules,
 }
 
 
+
+void InstructorLoadFitnessCriteria(vector<Course>& schedule) {
+	/* test print out statements before instructor load*/
+	cout << "-----Pre Change: Instructor Load-----" << endl;
+	cout << endl;
+	for (int i = 0; i < schedule.size(); i++) {
+		schedule.at(i).printCourseProperties();
+	}
+
+	map<string, pair<int, int>> instructorProps;
+	map<string, pair<int, int>>::iterator it;
+	pair<int, int> p = { 1, 1 };
+	//loop through courses to determine course counts 
+	for (int i = 0; i < schedule.size(); i++) {
+		Course& course1 = schedule.at(i);
+		bool first_time = false;
+		//if course1 instructor is not in map (same as the map.end()), add it
+		if (instructorProps.find(course1.getInstructor()) == instructorProps.end()) {
+			instructorProps.insert(make_pair(course1.getInstructor(), p));
+			first_time = true;
+		}
+		for (int j = i + 1; j < schedule.size(); j++) {
+			Course& course2 = schedule.at(j);
+			if (course1.getInstructor() == course2.getInstructor() &&
+				course1.getTime() == course2.getTime()) {
+				//first is count of courses with same instructor and same time
+				instructorProps[course1.getInstructor()].first += 1;
+
+			}
+			if (course1.getInstructor() == course2.getInstructor() && first_time) {
+				//second is count of courses with same instructor
+				instructorProps[course1.getInstructor()].second += 1;
+
+			}
+			
+		}
+	}
+	for (it = instructorProps.begin(); it != instructorProps.end(); it++) {
+		cout << "Instructor: " << it->first << "-> " << it->second.first << ", " << it->second.second << endl;
+	}
+	//loop through courses to check for course counts and apply fitness
+	for (int j = 0; j < schedule.size(); j++) {
+		//first is count of courses with same instructor and same time
+		if (instructorProps[schedule.at(j).getInstructor()].first == 1) {
+			schedule.at(j).incFitnessScore(0.2);
+		}
+		if (instructorProps[schedule.at(j).getInstructor()].first > 1) {
+			schedule.at(j).incFitnessScore(-0.2);
+		}
+		//second is count of courses with same instructor
+		if (instructorProps[schedule.at(j).getInstructor()].second > 4) {
+			schedule.at(j).incFitnessScore(-0.5);
+		}
+		if (instructorProps[schedule.at(j).getInstructor()].second < 3 &&
+			schedule.at(j).getInstructor() != "Xu") {
+			schedule.at(j).incFitnessScore(-0.4);
+		}
+		
+
+
+	}
+
+
+
+
+}
+
+void PreferFacultyFitnessCritera(Course& course) {
+	/* test print out statements before prefer faculty */
+	//cout << "-----Pre Change: Prefer Faculty-----" << endl;
+	//cout << endl;
+	//course.printCourseProperties();
+	vector<string> preF = course.getPreferredFaculty();
+	vector<string> otherF = course.getOtherFaculty();
+	int facultyFlag = 0;
+	for (int p = 0; p < preF.size(); p++) {
+		if (course.getInstructor() == preF.at(p) && facultyFlag == 0) {
+			course.incFitnessScore(0.5);
+			facultyFlag = 1;
+			break;
+		}
+	}
+	for (int o = 0; o < otherF.size(); o++) {
+		if (course.getInstructor() == otherF.at(o) && facultyFlag == 0) {
+			course.incFitnessScore(0.2);
+			facultyFlag = 2;
+			break;
+		}
+	}
+	if (facultyFlag == 0) {
+		course.incFitnessScore(-0.1);
+	}
+
+}
+
+
 void RoomSizeFitnessCriteria(Course &course) {
+	/* test print out statements before room size */
+	//cout << "-----Pre Change: Room Size-----" << endl;
+	//cout << endl;
+	//course.printCourseProperties();
 	if (course.getRoom().second < course.getCapacity()) {
 		course.incFitnessScore(-0.5);
 	}
-	else if (course.getRoom().second > course.getCapacity() * 3) {
+	if (course.getRoom().second > course.getCapacity() * 3) {
 		course.incFitnessScore(-0.2);
 	}
-	else if (course.getRoom().second > course.getCapacity() * 6) {
+	if (course.getRoom().second > course.getCapacity() * 6) {
 		course.incFitnessScore(-0.4);
 	}
 	else {
@@ -225,6 +307,7 @@ void RoomSizeFitnessCriteria(Course &course) {
 	}
 
 }
+
 
 void ClassFitnessCriteria(map<int, vector<Course>> &schedules) {
 	map<int, vector<Course>>::iterator i;
@@ -240,48 +323,42 @@ void ClassFitnessCriteria(map<int, vector<Course>> &schedules) {
 				if (course1.getRoom() == course2.getRoom() &&
 					course1.getTime() == course2.getTime()) {
 					course1.incFitnessScore(-0.5);
-					course2.incFitnessScore(-0.5);
 				}
 			}
-			RoomSizeCritera(course1);
+			RoomSizeFitnessCriteria(course1);
+			/* test print out statements after room size*/
+			//cout << "--------Post Change: Room Size-------" << endl;
+			//cout << endl;
+			//course1.printCourseProperties();
 
-			//fitness criteria for preferred and other faculty (NOT WORKING!)
-			/*
-			cout << "-----Pre Change-----" << endl;
-			cout << endl;
-			course1.printCourseProperties();
-			vector<string> preF = course1.getPreferredFaculty();
-			vector<string> otherF = course1.getOtherFaculty();
-			for (int l = 0; l < preF.size(); l++) {
-				for (int m = 0; m < otherF.size(); m++) {
-					if (course1.getInstructor() == preF.at(l)) {
-						course1.incFitnessScore(0.5);
-						break;
-					}
-					if (course1.getInstructor() == otherF.at(m)) {
-						course1.incFitnessScore(0.2);
-						break;
-					}
-					else {
-						course1.incFitnessScore(-0.1);
-						break;
-					}
+			PreferFacultyFitnessCritera(course1);
+			/* test print out statements after prefer faculty*/
+			//cout << "--------Post Change: Prefer Faculty-------" << endl;
+			//cout << endl;
+			//course1.printCourseProperties();
+			
 
-					
-
-				}
+		
 
 
-			}
 
-
-			cout << "--------Post Change-------" << endl;
-			cout << endl;
-			course1.printCourseProperties();
-			*/
+			
+			
 
 
 		}
+		//cout << "Schedule: " << i->first << endl;
+		InstructorLoadFitnessCriteria(schedule);
+		//cout << "------------------------" << endl;
+		/*test print out statements after instructor load*/
+		//cout << "-----Post Change: Instructor Load-----" << endl;
+		//cout << endl;
+		//for (int i = 0; i < schedule.size(); i++) {
+			//schedule.at(i).printCourseProperties();
+		//}
+		
+		
+
 	}
 
 
@@ -376,7 +453,7 @@ int main() {
 
 
 	//print out schedules
-
+	
 	for (it = randSchedules.begin(); it != randSchedules.end(); it++) {
 		cout << "-----------------------------" << endl;
 		cout << "Schedule: " << it->first << endl;
