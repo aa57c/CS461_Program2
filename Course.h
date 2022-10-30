@@ -43,6 +43,7 @@ public:
 	double getFitnessScore();
 	vector<string> getPreferredFaculty();
 	vector<string> getOtherFaculty();
+	int makeTimeInt();
 
 
 

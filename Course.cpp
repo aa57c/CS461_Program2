@@ -1,10 +1,30 @@
 #include <iostream>
+#include <string>
 #include "Course.h"
 
 using namespace std;
 
 
 
+int Course::makeTimeInt() {
+	string temp = this->time;
+	size_t i = 0;
+	for (; i < this->time.length(); i++) {
+		if (isdigit(this->time[i])) {
+			break;
+		}
+	}
+	temp = temp.substr(i, temp.length() - i);
+	int newTime = atoi(temp.c_str());
+
+	//convert am/pm to 24 time
+	if (newTime >= 1 && newTime <= 3) {
+		newTime += 12;
+	}
+	return newTime;
+
+
+}
 void Course::setPreferFaculty(string instructor) {
 	this->preferFaculty.push_back(instructor);
 }

@@ -1,6 +1,6 @@
 ﻿  Source.cpp
-C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(59,58): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(60,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(60,58): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(61,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(62,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(62,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\ashna\OneDrive\Documents\CS 461\Program2\Source.cpp(63,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
   Program2.vcxproj -> C:\Users\ashna\OneDrive\Documents\CS 461\Program2\x64\Debug\Program2.exe
