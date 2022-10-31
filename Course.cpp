@@ -6,6 +6,10 @@ using namespace std;
 
 
 
+
+void Course::resetFitnessScore() {
+	this->fitness_score = 0.0;
+}
 int Course::makeTimeInt() {
 	string temp = this->time;
 	size_t i = 0;

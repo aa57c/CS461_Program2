@@ -13,8 +13,17 @@
 
 using namespace std;
 
+double AvgVector(vector<double> v) {
+	double d = 0;
+	for (int i = 0; i < v.size(); i++) {
+		d += v.at(i);
+	}
+	return d / v.size();
+}
+
 
 int main() {
+	srand(time(NULL));
 
 	//vectors for classes, times, instructors, rooms (read only)
 	 vector<string> times = {
@@ -63,8 +72,9 @@ int main() {
 
 
 	//map for randomly generated schedules
-	map<int, vector<Course>> randSchedules;
-	map<int, vector<Course>>::iterator it;
+	//first value of pair is the schedule number, second value of pair is the total_fitness for that schedule
+	map<pair<int, double>, vector<Course>> randSchedules;
+	map<pair<int, double>, vector<Course>>::iterator it;
 
 	//temporary variable for one random class
 	Course Class;
@@ -72,7 +82,7 @@ int main() {
 
 
 	//generate 500+ (10 for testing rn) random schedules
-	for (int count = 1; count <= 10; count++) {
+	for (int count = 0; count < 500; count++) {
 		//temporary vector for random schedule
 		vector<Course> schedule;
 
@@ -84,21 +94,42 @@ int main() {
 			schedule.push_back(Class);
 
 		}
-		//in case duplicate classes (THE EXACT SAME) in the same schedule  are made, remove them
-		removeDuplicates(schedule);
-
 		//add each random schedule to state space
-		randSchedules.insert(make_pair(count, schedule));
+		randSchedules.insert(make_pair(make_pair(count, 0.0), schedule));
 
 	}
 
-	SameRoomSameTimeAdjust(randSchedules);
+	int gen_count = 0;
+	int cumulative_child_count = 0;
+	double avgFitness = 0;
+	while (gen_count < 2) {
 
-	for (it = randSchedules.begin(); it != randSchedules.end(); it++) {
-		int scheduleNumber = it->first;
-		vector<Course> schedule = it->second;
-		Fitness_Function(scheduleNumber, schedule);
+		cout << "Cume Child Count: " << cumulative_child_count << endl;
+		SameRoomSameTimeAdjust(randSchedules);
+
+		vector<double> total_fitness = Find_Total_Schedule_Fitnesses(randSchedules, it);
+
+
+		vector<pair<double, double>> DistTable = SoftMax(total_fitness);
+
+		avgFitness = AvgVector(total_fitness);
+
+		cumulative_child_count += Genetic_Alg(randSchedules, DistTable, total_fitness);
+		if (cumulative_child_count > 500) {
+			gen_count++;
+			cumulative_child_count -= 500;
+		}
+		
+
 	}
+
+	
+
+
+
+
+
+
 
 
 
@@ -106,7 +137,7 @@ int main() {
 	/*
 	for (it = randSchedules.begin(); it != randSchedules.end(); it++) {
 		cout << "-----------------------------" << endl;
-		cout << "Schedule: " << it->first << endl;
+		cout << "Schedule: " << it->first.first << ", Total Fitness: " << it->first.second << endl;
 		vector<Course> schedule = it->second;
 		cout << "Num of Classes: " << schedule.size() << endl;
 		cout << "-----------------------------" << endl;
@@ -119,6 +150,9 @@ int main() {
 
 	}
 	*/
+	
+
+	
 	
 	
 

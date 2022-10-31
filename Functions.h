@@ -23,9 +23,9 @@ Course generateRandomClass(
 	vector<string> instructors,
 	vector<pair<string, int>> rooms);
 
-void removeDuplicates(vector<Course>& schedule);
+//void removeDuplicates(vector<Course>& schedule);
 
-void setPreferredFaculty(map<int, vector<Course>>& schedules,
+void setPreferredFaculty(map<pair<int, double>, vector<Course>>& schedules,
 	map<int, vector<Course>>::iterator i);
 
 void CourseSpecificFitnessAdjust(vector<Course>& schedule);
@@ -36,6 +36,10 @@ void PreferFacultyFitnessAdjust(Course& course);
 
 void RoomSizeFitnessAdjust(Course& course);
 
-void SameRoomSameTimeAdjust(map<int, vector<Course>>& schedules);
+void SameRoomSameTimeAdjust(map<pair<int, double>, vector<Course>>& schedules);
 
-int Fitness_Function(map<int, vector<Course>>& schedules, map<int, vector<Course>>::iterator i);
+int Genetic_Alg(map<pair<int, double>, vector<Course>>& schedules, vector<pair<double, double>> dist, vector<double> fitness_scores);
+
+vector<pair<double, double>> SoftMax(vector<double>& total_fitness);
+
+vector<double> Find_Total_Schedule_Fitnesses(map<pair<int, double>, vector<Course>>& schedules, map<pair<int, double>, vector<Course>>::iterator it);

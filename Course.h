@@ -34,6 +34,7 @@ public:
 	void setRoom(pair<string, int> r);
 	void incFitnessScore(double f);
 	void printCourseProperties();
+	void resetFitnessScore();
 
 	string getName();
 	int getCapacity();

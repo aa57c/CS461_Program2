@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <set>
 #include <random>
 #include <queue>
 #include <cmath>
@@ -10,7 +11,7 @@
 
 //function for generating random class name
 pair<string, int> generateRandomClassName(vector<pair<string, int>> classes, int size) {
-	srand(time(0));
+	//srand(1);
 	int randIndex = rand() % size;
 	return classes.at(randIndex);
 
@@ -19,7 +20,7 @@ pair<string, int> generateRandomClassName(vector<pair<string, int>> classes, int
 
 //function for generating random time
 string generateRandomTime(vector<string> times, int size) {
-	srand(time(0));
+	//srand(1);
 	int randIndex = rand() % size;
 	return times.at(randIndex);
 
@@ -27,7 +28,7 @@ string generateRandomTime(vector<string> times, int size) {
 
 //function for generating random instructor
 string generateRandomInstructor(vector<string> instructors, int size) {
-	srand(time(0));
+	//srand(1);
 	int randIndex = rand() % size;
 	return instructors.at(randIndex);
 
@@ -35,7 +36,7 @@ string generateRandomInstructor(vector<string> instructors, int size) {
 
 //function for generating random room
 pair<string, int> generateRandomRoom(vector<pair<string, int>> rooms, int size) {
-	srand(time(0));
+	//srand(time(0));
 	int randIndex = rand() % size;
 	return rooms.at(randIndex);
 
@@ -74,31 +75,10 @@ Course generateRandomClass(
 
 }
 
-//function to remove duplicates from schedule in case of them
-void removeDuplicates(vector<Course>& schedule) {
-	vector<Course>::iterator it;
-	vector<Course>::iterator it2;
-
-	for (it = schedule.begin(); it < schedule.end(); it++) {
-		Course& course = *it;
-		for (it2 = it + 1; it2 < schedule.end(); it2++) {
-			if ((course.getName() == it2->getName()) &&
-				(course.getCapacity() == it2->getCapacity()) &&
-				(course.getInstructor() == it2->getInstructor()) &&
-				(course.getRoom() == it2->getRoom()) &&
-				(course.getTime() == it2->getTime())) {
-				schedule.erase(it2);
-			}
-		}
-	}
 
 
-}
-
-
-
-void setPreferredFaculty(map<int, vector<Course>>& schedules,
-	map<int, vector<Course>>::iterator i) {
+void setPreferredFaculty(map<pair<int, double>, vector<Course>>& schedules,
+	map<pair<int, double>, vector<Course>>::iterator i) {
 	for (i = schedules.begin(); i != schedules.end(); i++) {
 		vector<Course>& schedule = i->second;
 		for (int j = 0; j < schedule.size(); j++) {
@@ -322,7 +302,7 @@ void InstructorLoadFitnessAdjust(vector<Course>& schedule) {
 		bool first_time = false;
 		//if course1 instructor is not in map (same as the map.end()), add it
 		if (instructorProps.find(course1.getInstructor()) == instructorProps.end()) {
-			vector<int> v = { 1, 1, 0, 0 };
+			vector<int> v = { 1, 1 };
 			instructorProps.insert(make_pair(course1.getInstructor(), v));
 			first_time = true;
 		}
@@ -334,16 +314,6 @@ void InstructorLoadFitnessAdjust(vector<Course>& schedule) {
 				course1.getTime() == course2.getTime()) {
 				//at index 0 is count of courses with same instructor and same time
 				instructorProps[course1.getInstructor()].at(0) += 1;
-
-			}
-			if (course1.getInstructor() == course2.getInstructor() &&
-				abs(course1.makeTimeInt() - course2.makeTimeInt() == 1)) {
-				//at index 2 is whether the courses are happening consecutively
-				instructorProps[course1.getInstructor()].at(2) = 1;
-				if ((room1 == "Katz" || room1 == "Bloch") && (room2 != "Katz" && room2 != "Bloch")) {
-					//at index 3 is whether one course is in room Block or Katz and the other isn't
-					instructorProps[course1.getInstructor()].at(3) = 1;
-				}
 
 			}
 			if (course1.getInstructor() == course2.getInstructor() && first_time) {
@@ -365,7 +335,7 @@ void InstructorLoadFitnessAdjust(vector<Course>& schedule) {
 		if (instructorProps[schedule.at(j).getInstructor()].at(0) == 1) {
 			schedule.at(j).incFitnessScore(0.2);
 		}
-		if (instructorProps[schedule.at(j).getInstructor()].at(1) > 1) {
+		if (instructorProps[schedule.at(j).getInstructor()].at(0) > 1) {
 			schedule.at(j).incFitnessScore(-0.2);
 		}
 		//at index 1 is count of courses with same instructor
@@ -375,16 +345,6 @@ void InstructorLoadFitnessAdjust(vector<Course>& schedule) {
 		if (instructorProps[schedule.at(j).getInstructor()].at(1) < 3 &&
 			schedule.at(j).getInstructor() != "Xu") {
 			schedule.at(j).incFitnessScore(-0.4);
-		}
-		//index 2 equals consecutive courses
-		if (instructorProps[schedule.at(j).getInstructor()].at(2) == 1) {
-			//index 3 equals if one course is in Katz or Bloch and the other isn't
-			if (instructorProps[schedule.at(j).getInstructor()].at(3) == 1) {
-				schedule.at(j).incFitnessScore(-0.4);
-			}
-			else {
-				schedule.at(j).incFitnessScore(0.5);
-			}
 		}
 
 
@@ -447,8 +407,10 @@ void RoomSizeFitnessAdjust(Course& course) {
 }
 
 
-void SameRoomSameTimeAdjust(map<int, vector<Course>>& schedules) {
-	map<int, vector<Course>>::iterator i;
+void SameRoomSameTimeAdjust(map<pair<int, double>, vector<Course>>& schedules) {
+
+	cout << "Schedule size: " << schedules.size() << endl;
+	map<pair<int, double>, vector<Course>>::iterator i;
 
 	setPreferredFaculty(schedules, i);
 
@@ -485,9 +447,9 @@ void SameRoomSameTimeAdjust(map<int, vector<Course>>& schedules) {
 
 
 		}
-		cout << "Schedule: " << i->first << endl;
+		//cout << "Schedule: " << i->first << endl;
 		InstructorLoadFitnessAdjust(schedule);
-		cout << "------------------------" << endl;
+		//cout << "------------------------" << endl;
 		/*test print out statements after instructor load*/
 		//cout << "-----Post Change: Instructor Load-----" << endl;
 		//cout << endl;
@@ -510,49 +472,222 @@ void SameRoomSameTimeAdjust(map<int, vector<Course>>& schedules) {
 
 	}
 
+	cout << "End of SameRoomSameTime()" << endl;
 
 
 
 
 }
 
-int Fitness_Function(int &schedNum, vector<Course>& schedule) {
-	//nodes to add to priority queue (min heap)
-	struct node {
-		int scheduleNum;
-		double total_fitness;
+vector<pair<double, double>> SoftMax(vector<double>& total_fitness) {
+	vector<double> Exponen;
+	double Sum = 0.0;
+	vector<double> probabilities;
+	vector<pair<double, double>> distributionTable;
+	/*
+	cout << "----Fitness Scores for Each Schedule-----" << endl;
+	for (int f = 0; f < total_fitness.size(); f++) {
+		cout << "Schedule: " << f + 1 << ", Fitness: " << total_fitness.at(f) << endl;
 
-		node(int scheduleNum, double total_fitness)
-			: scheduleNum(scheduleNum), total_fitness(total_fitness) {
+	}
+	*/
+	//cout << endl;
+	//cout << endl;
+	for (int i = 0; i < total_fitness.size(); i++) {
+		Exponen.push_back(exp(total_fitness.at(i)));
+	}
+	/*
+	cout << "-------Exponentials for Each Schedule-------" << endl;
+	for (int e = 0; e < Exponen.size(); e++) {
+		cout << "Schedule: " << e + 1 << ", Exponential: " << Exponen.at(e) << endl;
 
+	}
+	*/
+	//cout << endl;
+	//cout << endl;
+	for (int j = 0; j < Exponen.size(); j++) {
+		Sum += Exponen.at(j);
+	}
+	//cout << "Sum of Exponents: " << Sum << endl;
+	//cout << endl;
+	for (int k = 0; k < Exponen.size(); k++) {
+		double probability = Exponen.at(k) / Sum;
+		probabilities.push_back(probability);
+	}
+	/*
+	cout << "-----Probabilities for Each Schedule-------" << endl;
+	for (int p = 0; p < probabilities.size(); p++) {
+		cout << "Schedule: " << p + 1 << ", Exponential: " << probabilities.at(p) << endl;
+
+
+	}
+	*/
+
+	for (int p = 0; p < probabilities.size(); p++) {
+		//cout << "Schedule: " << p + 1 << ", Exponential: " << probabilities.at(p) << endl;
+		if (p == 0) {
+			distributionTable.push_back(make_pair(probabilities.at(p), probabilities.at(p)));
 		}
-	};
-
-	//this is a structure which implements the 
-	//operator overloading, // operator overloading, to compare the fitness of each node added to the priority queue 
-	// (min heap)
-	struct CompareFitness {
-		bool operator()(node const& n1, node const& n2)
-		{
-			// return "true" if "n1" is ordered
-			// before "n2", for example:
-			return n1.total_fitness > n2.total_fitness;
+		else {
+			distributionTable.push_back(make_pair(probabilities.at(p), distributionTable.at(p - 1).second + probabilities.at(p)));
 		}
-	};
-	priority_queue<node, vector<node>, CompareFitness> Fpq;
 
-	double total_fitness = 0;
-
-	for (int i = 0; i < schedule.size(); i++) {
-		total_fitness += schedule.at(i).getFitnessScore();
 	}
 
-	Fpq.push(node(schedNum, total_fitness));
+	cout << "Schedule\t| " << "P(n)\t| " << "Cumulative P(n)\t| " << endl;
+	cout << endl;
+	for (int d = 0; d < distributionTable.size(); d++) {
+		cout << d + 1 << "\t| " << distributionTable.at(d).first << "\t| " << distributionTable.at(d).second << endl;
+	}
 
 
+	
 
-	return -1;
+
+	return distributionTable;
+
 }
+
+vector<double> Find_Total_Schedule_Fitnesses(map<pair<int, double>, vector<Course>>& schedules, map<pair<int, double>, vector<Course>>::iterator it) {
+	//calculates the fitness for all schedules (indexes line up with randSchedules map)
+	double fitness = 0;
+	vector<double> total_fitness;
+	for (it = schedules.begin(); it != schedules.end(); it++) {
+		vector<Course> schedule = it->second;
+		//cout << "Schedule: " << it->first.first << endl;
+		//cout << "-----------------" << endl;
+		for (int i = 0; i < schedule.size(); i++) {
+			fitness += schedule.at(i).getFitnessScore();
+			//cout << "Fitness after Course " << i + 1 << ": " << fitness << endl;
+			//cout << endl;
+
+		}
+		//cout << endl;
+		//cout << "Total Fitness for Schedule " << it->first.first << ": " << fitness << endl;
+		total_fitness.push_back(fitness);
+		fitness = 0;
+
+	}
+	//because indexes in total fitness vector line up with map, remove old key and value from initialization and replace it with total fitness score
+	for (int i = 0; i < total_fitness.size(); i++) {
+		auto node = schedules.extract(make_pair(i, 0.0));
+		if (!node.empty()) {
+			node.key() = make_pair(i, total_fitness.at(i));
+			schedules.insert(move(node));
+		}
+	}
+	return total_fitness;
+
+}
+
+int Genetic_Alg(map<pair<int, double>, vector<Course>>& schedules, vector<pair<double, double>> dist, vector<double> fitness_scores) {
+
+	//flag if found 2 parents to make a child
+	int found = 0;
+	//double randSched2 = rand() / static_cast<double>(RAND_MAX);
+
+	//iterator for schedules
+	map<pair<int, double>, vector<Course>>::iterator s;
+
+	//children variables
+	map<pair<int, double>, vector<Course>> children;
+	vector<Course> childCourses;
+	map<pair<int, double>, vector<Course>>::iterator ch;
+	//parent variables
+	map<pair<int, double>, vector<Course>> parents;
+	map<pair<int, double>, vector<Course>>::iterator p;
+
+	//one schedule picked as a parent
+	pair<pair<int, double>, vector<Course>> parent;
+
+
+
+	double randParent = rand() / static_cast<double>(RAND_MAX);
+	for (int i = 0; i < dist.size(); i++) {
+		//picks parents according to cumulative probability
+		if (randParent < dist.at(i).second) {
+			parent = make_pair(make_pair(i, fitness_scores.at(i)), schedules[make_pair(i, fitness_scores.at(i))]);
+			parents.insert(parent);
+
+		}
+	}
+	cout << "Size of Parents: " << parents.size() << endl;
+	//represents parent count
+	
+	int count = 1;
+	int child = schedules.size();
+	for (p = parents.begin(); p != parents.end(); p++) {
+		vector<Course>& parentCourses = p->second;
+		if (count == 1) {
+			for (int i = 1; i <= 5; i++) {
+				int randCourse = rand() % parentCourses.size();
+				childCourses.push_back(parentCourses.at(randCourse));
+			}
+		}
+		else if (count == 2) {
+			for (int i = 1; i <= 6; i++) {
+				int randCourse = rand() % parentCourses.size();
+				childCourses.push_back(parentCourses.at(randCourse));
+
+			}
+			for (int i = 0; i < childCourses.size(); i++) {
+				childCourses.at(i).resetFitnessScore();
+			}
+			if (childCourses.size() == 0) {
+				cout << "Child does not have courses" << endl;
+			}
+			children.insert(make_pair(make_pair(child, 0.0), childCourses));
+			child++;
+			count = 0;
+
+		}
+		count++;
+
+
+	}
+	cout << "Size of Children: " << children.size() << endl;
+
+
+
+	
+	//remove weakest schedule
+	for (int i = 0; i < children.size(); i++) {
+		schedules.erase(make_pair(i, fitness_scores.at(i)));
+
+	}
+
+	cout << "After removal of Weakest -> Size of Schedule: " << schedules.size() << endl;
+
+	//resetting key for all surviving parents 
+	for (int i = 0; i < schedules.size(); i++) {
+		auto node = schedules.extract(make_pair(i, fitness_scores.at(i)));
+		if (!node.empty()) {
+			node.key() = make_pair(i, 0.0);
+			schedules.insert(move(node));
+		}
+	}
+
+	//add children back into original population
+	schedules.insert(children.begin(), children.end());
+
+	cout << "After adding Children -> Size of Schedule: " << schedules.size() << endl;
+
+
+
+
+	return children.size();
+
+
+
+
+	
+
+
+
+
+
+}
+
 
 
 
